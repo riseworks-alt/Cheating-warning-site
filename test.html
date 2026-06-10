@@ -20,10 +20,32 @@ body{
     font-weight:bold;
 }
 
+#userInfo{
+    max-width:500px;
+    margin:30px auto;
+    padding:20px;
+    border:1px solid #ddd;
+    border-radius:10px;
+    text-align:center;
+}
+
+#userInfo input{
+    width:90%;
+    padding:10px;
+    font-size:16px;
+}
+
+#userInfo button{
+    padding:10px 20px;
+    font-size:16px;
+    cursor:pointer;
+}
+
 iframe{
     width:100%;
     height:2200px;
     border:none;
+    display:none;
 }
 
 #counter{
@@ -38,6 +60,12 @@ iframe{
     line-height:1.8;
     transition:0.3s;
 }
+
+#studentInfoDisplay{
+    font-size:12px;
+    margin-top:5px;
+}
+
 </style>
 </head>
 <body>
@@ -47,6 +75,7 @@ iframe{
 </div>
 
 <div id="counter">
+
     <div id="leaveCount">
         離脱回数：0
     </div>
@@ -54,28 +83,202 @@ iframe{
     <div id="leaveTime">
         離脱秒数：0 秒
     </div>
+
+    <div id="studentInfoDisplay">
+        未開始
+    </div>
+
+</div>
+
+<div id="userInfo">
+
+    <h2>受験者情報</h2>
+
+    <input
+        type="text"
+        id="studentName"
+        placeholder="氏名"
+    >
+
+    <br><br>
+
+    <input
+        type="text"
+        id="studentId"
+        placeholder="学籍番号"
+    >
+
+    <br><br>
+
+    <button id="startBtn">
+        テスト開始
+    </button>
+
 </div>
 
 <iframe id="formFrame"></iframe>
 
 <script>
 
-const params = new URLSearchParams(window.location.search);
-const id = params.get("id");
+const params =
+    new URLSearchParams(
+        window.location.search
+    );
+
+const id =
+    params.get("id");
 
 if(!id){
 
     document.body.innerHTML =
         "<h1>フォームが指定されていません</h1>";
 
-    throw new Error("フォームIDがありません");
+    throw new Error(
+        "フォームIDがありません"
+    );
 }
 
 const formUrl =
-    `https://docs.google.com/forms/d/e/${id}/viewform?embedded=true`;
+`https://docs.google.com/forms/d/e/${id}/viewform?embedded=true`;
 
-document.getElementById("formFrame").src = formUrl;
+let studentName = "";
+let studentId = "";
 
+let startTime = null;
+
+const browser =
+    navigator.userAgent;
+
+const os =
+    navigator.platform;
+const APPS_SCRIPT_URL =
+"https://script.google.com/macros/s/AKfycbzX40ecOj8n2KO9GofwIDPwvIoVdoJOH9ruvelseDdGcGFiK0CCvCL3zxfawDQHm5G1PQ/exec";
+
+document
+.getElementById("startBtn")
+.addEventListener(
+    "click",
+    () => {
+
+        studentName =
+            document
+            .getElementById(
+                "studentName"
+            )
+            .value
+            .trim();
+
+        studentId =
+            document
+            .getElementById(
+                "studentId"
+            )
+            .value
+            .trim();
+
+        if(
+            !studentName ||
+            !studentId
+        ){
+
+            alert(
+                "氏名と学籍番号を入力してください"
+            );
+
+            return;
+        }
+
+        startTime =
+            new Date()
+            .toISOString();
+
+        document
+            .getElementById(
+                "studentInfoDisplay"
+            )
+            .innerHTML =
+            studentName +
+            "<br>" +
+            studentId;
+
+        document
+            .getElementById(
+                "userInfo"
+            )
+            .style.display =
+            "none";
+
+        document
+            .getElementById(
+                "formFrame"
+            )
+            .style.display =
+            "block";
+
+        document
+            .getElementById(
+                "formFrame"
+            )
+            .src =
+            formUrl;
+    }
+);
+
+async function sendLog(){
+
+    try{
+
+        await fetch(
+            APPS_SCRIPT_URL,
+            {
+                method:"POST",
+                headers:{
+                    "Content-Type":"application/json"
+                },
+                body:JSON.stringify({
+
+                    name:
+                        studentName,
+
+                    studentId:
+                        studentId,
+
+                    leaveCount:
+                        leaveCount,
+
+                    leaveSeconds:
+                        totalLeaveSeconds,
+
+                    os:
+                        os,
+
+                    browser:
+                        browser,
+
+                    startTime:
+                        startTime,
+
+                    endTime:
+                        new Date()
+                        .toISOString()
+
+                })
+            }
+        );
+
+        console.log(
+            "ログ送信成功"
+        );
+
+    }catch(error){
+
+        console.error(
+            "ログ送信失敗",
+            error
+        );
+    }
+}
+    
 let leaveCount = 0;
 let totalLeaveSeconds = 0;
 
@@ -86,50 +289,65 @@ document.addEventListener(
     "visibilitychange",
     () => {
 
-        // 離脱した瞬間
         if(document.hidden){
 
             leftPage = true;
-            leaveStartTime = Date.now();
+
+            leaveStartTime =
+                Date.now();
 
             return;
         }
 
-        // 戻ってきた瞬間
-        if(!document.hidden && leftPage){
+        if(
+            !document.hidden &&
+            leftPage
+        ){
 
             leaveCount++;
 
             let leaveSeconds = 0;
 
-            if(leaveStartTime){
+            if(
+                leaveStartTime
+            ){
 
-                leaveSeconds = Math.round(
-                    (Date.now() - leaveStartTime) / 1000
-                );
+                leaveSeconds =
+                    Math.round(
+                        (
+                            Date.now() -
+                            leaveStartTime
+                        ) / 1000
+                    );
 
-                totalLeaveSeconds += leaveSeconds;
+                totalLeaveSeconds +=
+                    leaveSeconds;
             }
 
-            // 回数表示
-            document.getElementById(
-                "leaveCount"
-            ).innerText =
-                "離脱回数：" + leaveCount;
+            document
+                .getElementById(
+                    "leaveCount"
+                )
+                .innerText =
+                "離脱回数：" +
+                leaveCount;
 
-            // 秒数表示
-            document.getElementById(
-                "leaveTime"
-            ).innerText =
+            document
+                .getElementById(
+                    "leaveTime"
+                )
+                .innerText =
                 "離脱秒数：" +
                 totalLeaveSeconds +
                 " 秒";
-
-            // 1回以上で赤表示
-            if(leaveCount >= 1){
+                sendLog();
+            if(
+                leaveCount >= 1
+            ){
 
                 const counter =
-                    document.getElementById(
+                    document
+                    .getElementById(
                         "counter"
                     );
 
@@ -163,6 +381,35 @@ document.addEventListener(
     }
 );
 
+console.log(
+    "受験者:",
+    studentName
+);
+
+console.log(
+    "学籍番号:",
+    studentId
+);
+
+console.log(
+    "OS:",
+    os
+);
+
+console.log(
+    "ブラウザ:",
+    browser
+);
+
+window.addEventListener(
+    "beforeunload",
+    () => {
+
+        sendLog();
+
+    }
+);
+    
 </script>
 
 </body>
