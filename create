@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>テストページ作成</title>
+
+<style>
+body{
+    font-family:sans-serif;
+    max-width:800px;
+    margin:40px auto;
+    padding:20px;
+}
+
+input{
+    width:100%;
+    padding:10px;
+    font-size:16px;
+}
+
+button{
+    padding:10px 20px;
+    margin-top:10px;
+    cursor:pointer;
+}
+
+#result{
+    margin-top:20px;
+    word-break:break-all;
+}
+</style>
+</head>
+<body>
+
+<h1>Googleフォーム テストページ作成</h1>
+
+<p>GoogleフォームのURLを入力してください</p>
+
+<input id="formUrl" placeholder="https://docs.google.com/forms/...">
+
+<br>
+
+<button onclick="createLink()">
+配布URL作成
+</button>
+
+<div id="result"></div>
+
+<script>
+
+function createLink(){
+
+    const url =
+        document.getElementById("formUrl").value.trim();
+
+    const match =
+        url.match(/\/d\/e\/([^\/]+)\//);
+
+    if(!match){
+        alert("GoogleフォームURLが正しくありません");
+        return;
+    }
+
+    const formId = match[1];
+
+    const base =
+        window.location.origin +
+        window.location.pathname.replace(
+            "create.html",
+            "test.html"
+        );
+
+    const testUrl =
+        `${base}?id=${formId}`;
+
+    document.getElementById("result").innerHTML = `
+        <h3>配布URL</h3>
+
+        <input
+            id="generated"
+            value="${testUrl}"
+            readonly>
+
+        <br><br>
+
+        <button onclick="copyUrl()">
+            コピー
+        </button>
+    `;
+}
+
+function copyUrl(){
+
+    const input =
+        document.getElementById("generated");
+
+    input.select();
+
+    navigator.clipboard.writeText(
+        input.value
+    );
+
+    alert("コピーしました");
+}
+
+</script>
+
+</body>
+</html>
