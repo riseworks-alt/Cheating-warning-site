@@ -116,7 +116,6 @@ iframe{
 
 </div>
 
-<iframe id="formFrame"></iframe>
 
 <script>
 
@@ -208,19 +207,7 @@ document
             .style.display =
             "none";
 
-        document
-            .getElementById(
-                "formFrame"
-            )
-            .style.display =
-            "block";
-
-        document
-            .getElementById(
-                "formFrame"
-            )
-            .src =
-            formUrl;
+        window.location.href = formUrl;
     }
 );
 
