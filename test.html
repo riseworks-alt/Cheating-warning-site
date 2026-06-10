@@ -111,23 +111,26 @@ window.addEventListener(
     }
 );
 
-window.addEventListener(
-    "focus",
-    () => {
+let hasBlur = false;
 
-        console.log(
-            "[補助検知] フォーカス復帰: " +
-            new Date().toLocaleTimeString()
-        );
+window.addEventListener("blur", () => {
+    hasBlur = true;
+});
 
-        document
-            .getElementById(
-                "focusStatus"
-            )
-            .innerText =
-            "状態：監視中";
+document.addEventListener("visibilitychange", () => {
+
+    if(document.hidden){
+
+        leaveStartTime = Date.now();
     }
-);
+
+    if(!document.hidden && leaveStartTime){
+
+        leaveCount++;
+
+        ...
+    }
+});
 
 </script>
 
