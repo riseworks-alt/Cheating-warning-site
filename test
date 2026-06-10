@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>オンラインテスト</title>
+
+<style>
+
+body{
+    margin:0;
+    font-family:sans-serif;
+}
+
+.header{
+    background:#ffebee;
+    color:#c62828;
+    text-align:center;
+    padding:10px;
+    font-weight:bold;
+}
+
+iframe{
+    width:100%;
+    height:2200px;
+    border:none;
+}
+
+#counter{
+    position:fixed;
+    top:10px;
+    right:10px;
+    background:white;
+    border:1px solid #ccc;
+    padding:10px;
+    z-index:9999;
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+テスト中は他のタブやアプリを開かないでください
+</div>
+
+<div id="counter">
+離脱回数：0
+</div>
+
+<iframe id="formFrame"></iframe>
+
+<script>
+
+const params =
+    new URLSearchParams(
+        window.location.search
+    );
+
+const id = params.get("id");
+
+if(!id){
+
+    document.body.innerHTML =
+        "<h1>フォームが指定されていません</h1>";
+
+    throw new Error();
+}
+
+const formUrl =
+    `https://docs.google.com/forms/d/e/${id}/viewform?embedded=true`;
+
+document
+.getElementById("formFrame")
+.src = formUrl;
+
+let leaveCount = 0;
+let leftPage = false;
+
+document.addEventListener(
+    "visibilitychange",
+    () => {
+
+        if(document.hidden){
+            leftPage = true;
+        }
+
+        if(!document.hidden && leftPage){
+
+            leaveCount++;
+
+            document.getElementById(
+                "counter"
+            ).innerText =
+                "離脱回数：" +
+                leaveCount;
+
+            alert(
+                "【警告】\n\n" +
+                "テスト画面から離れました。\n" +
+                "離脱回数：" +
+                leaveCount +
+                "回"
+            );
+
+            leftPage = false;
+        }
+    }
+);
+
+</script>
+
+</body>
+</html>
