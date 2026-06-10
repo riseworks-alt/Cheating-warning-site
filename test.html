@@ -34,6 +34,9 @@ iframe{
     border:1px solid #ccc;
     padding:10px;
     z-index:9999;
+    border-radius:8px;
+    line-height:1.8;
+    transition:0.3s;
 }
 </style>
 </head>
@@ -44,7 +47,13 @@ iframe{
 </div>
 
 <div id="counter">
-離脱回数：0
+    <div id="leaveCount">
+        離脱回数：0
+    </div>
+
+    <div id="leaveTime">
+        離脱秒数：0 秒
+    </div>
 </div>
 
 <iframe id="formFrame"></iframe>
@@ -74,35 +83,103 @@ document
 .src = formUrl;
 
 let leaveCount = 0;
+let totalLeaveSeconds = 0;
+
 let leftPage = false;
+let leaveStartTime = null;
 
 document.addEventListener(
     "visibilitychange",
     () => {
 
+        // 離脱した瞬間
         if(document.hidden){
+
             leftPage = true;
+
+            leaveStartTime =
+                Date.now();
         }
 
+        // 戻ってきた瞬間
         if(!document.hidden && leftPage){
 
             leaveCount++;
 
-            document.getElementById(
-                "counter"
-            ).innerText =
-                "離脱回数：" +
-                leaveCount;
+            let leaveSeconds = 0;
+
+            if(leaveStartTime){
+
+                leaveSeconds =
+                    Math.round(
+                        (Date.now() - leaveStartTime)
+                        / 1000
+                    );
+
+                totalLeaveSeconds +=
+                    leaveSeconds;
+            }
+
+            // 回数表示
+            document
+                .getElementById(
+                    "leaveCount"
+                )
+                .innerText =
+                    "離脱回数：" +
+                    leaveCount;
+
+            // 秒数表示
+            document
+                .getElementById(
+                    "leaveTime"
+                )
+                .innerText =
+                    "離脱秒数：" +
+                    totalLeaveSeconds +
+                    " 秒";
+
+            // 1回以上なら赤背景
+            if(leaveCount >= 1){
+
+                document
+                    .getElementById(
+                        "counter"
+                    )
+                    .style.background =
+                        "#ff5252";
+
+                document
+                    .getElementById(
+                        "counter"
+                    )
+                    .style.color =
+                        "white";
+
+                document
+                    .getElementById(
+                        "counter"
+                    )
+                    .style.fontWeight =
+                        "bold";
+            }
 
             alert(
                 "【警告】\n\n" +
-                "テスト画面から離れました。\n" +
+                "テスト画面から離れました。\n\n" +
+                "今回の離脱時間：" +
+                leaveSeconds +
+                " 秒\n" +
+                "累計離脱時間：" +
+                totalLeaveSeconds +
+                " 秒\n" +
                 "離脱回数：" +
                 leaveCount +
-                "回"
+                " 回"
             );
 
             leftPage = false;
+            leaveStartTime = null;
         }
     }
 );
