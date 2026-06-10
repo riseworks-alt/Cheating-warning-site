@@ -54,21 +54,13 @@ iframe{
     <div id="leaveTime">
         離脱秒数：0 秒
     </div>
-
-    <div id="focusStatus">
-        状態：監視中
-    </div>
 </div>
 
 <iframe id="formFrame"></iframe>
 
 <script>
 
-const params =
-    new URLSearchParams(
-        window.location.search
-    );
-
+const params = new URLSearchParams(window.location.search);
 const id = params.get("id");
 
 if(!id){
@@ -76,15 +68,13 @@ if(!id){
     document.body.innerHTML =
         "<h1>フォームが指定されていません</h1>";
 
-    throw new Error();
+    throw new Error("フォームIDがありません");
 }
 
 const formUrl =
     `https://docs.google.com/forms/d/e/${id}/viewform?embedded=true`;
 
-document
-.getElementById("formFrame")
-.src = formUrl;
+document.getElementById("formFrame").src = formUrl;
 
 let leaveCount = 0;
 let totalLeaveSeconds = 0;
@@ -92,45 +82,86 @@ let totalLeaveSeconds = 0;
 let leftPage = false;
 let leaveStartTime = null;
 
-// blur/focus を補助として利用
-window.addEventListener(
-    "blur",
+document.addEventListener(
+    "visibilitychange",
     () => {
 
-        console.log(
-            "[補助検知] フォーカス喪失: " +
-            new Date().toLocaleTimeString()
-        );
+        // 離脱した瞬間
+        if(document.hidden){
 
-        document
-            .getElementById(
-                "focusStatus"
-            )
-            .innerText =
-            "状態：フォーカス喪失";
+            leftPage = true;
+            leaveStartTime = Date.now();
+
+            return;
+        }
+
+        // 戻ってきた瞬間
+        if(!document.hidden && leftPage){
+
+            leaveCount++;
+
+            let leaveSeconds = 0;
+
+            if(leaveStartTime){
+
+                leaveSeconds = Math.round(
+                    (Date.now() - leaveStartTime) / 1000
+                );
+
+                totalLeaveSeconds += leaveSeconds;
+            }
+
+            // 回数表示
+            document.getElementById(
+                "leaveCount"
+            ).innerText =
+                "離脱回数：" + leaveCount;
+
+            // 秒数表示
+            document.getElementById(
+                "leaveTime"
+            ).innerText =
+                "離脱秒数：" +
+                totalLeaveSeconds +
+                " 秒";
+
+            // 1回以上で赤表示
+            if(leaveCount >= 1){
+
+                const counter =
+                    document.getElementById(
+                        "counter"
+                    );
+
+                counter.style.background =
+                    "#ff5252";
+
+                counter.style.color =
+                    "white";
+
+                counter.style.fontWeight =
+                    "bold";
+            }
+
+            alert(
+                "【警告】\n\n" +
+                "テスト画面から離れました。\n\n" +
+                "今回の離脱時間：" +
+                leaveSeconds +
+                " 秒\n" +
+                "累計離脱時間：" +
+                totalLeaveSeconds +
+                " 秒\n" +
+                "離脱回数：" +
+                leaveCount +
+                " 回"
+            );
+
+            leftPage = false;
+            leaveStartTime = null;
+        }
     }
 );
-
-let hasBlur = false;
-
-window.addEventListener("blur", () => {
-    hasBlur = true;
-});
-
-document.addEventListener("visibilitychange", () => {
-
-    if(document.hidden){
-
-        leaveStartTime = Date.now();
-    }
-
-    if(!document.hidden && leaveStartTime){
-
-        leaveCount++;
-
-        ...
-    }
-});
 
 </script>
 
